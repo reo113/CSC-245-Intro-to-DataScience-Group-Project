@@ -2,7 +2,7 @@
 This dataset provides information about video games that have been released on various platforms over the years. 
 
 ## Dataset Information
-The dataset contains the following columns:\n
+The dataset contains the following columns:
 1. Title: Title of the game
 2. Release Date: Date of release of the game's first version
 3. Team: Game developer team
