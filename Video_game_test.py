@@ -77,7 +77,7 @@ print(df_rate)
 #df_rate.plot()
 #plt.show()
 
-#Hard testing top 10 games/genres
+#Example of hard testing top 10 games/genres
 top_10_games = ['Fortnite', 'Minecraft', 'Grand Theft Auto V', 'Counter-Strike: Global Offensive', 'Apex Legends', 'League of Legends', 'Call of Duty: Warzone', 'Valorant', 'Dota 2', 'Roblox']
 top_10_genres = ['Action', 'Shooter', 'Sports', 'Role-Playing', 'Adventure', 'Strategy', 'Simulation', 'Fighting', 'Racing', 'Puzzle']
 
