@@ -270,7 +270,7 @@ df['Playing'] = pd.to_numeric(df['Playing'], errors='coerce')
 # fill NaN values with 0
 df['Playing'] = df['Playing'].fillna(0)
 
-#Had to drop duplicates again due to more data being inputted
+#Had to drop duplicates again due to certain columns duplicates not being dropped
 df.drop_duplicates(inplace=True)
 
 
