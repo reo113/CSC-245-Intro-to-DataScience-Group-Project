@@ -3,15 +3,18 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.preprocessing import LabelEncoder
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
+from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
+from sklearn.model_selection import cross_validate, train_test_split
 
 
 # import the data
 df = pd.read_csv('dataset\\games.csv')
+df.drop_duplicates(inplace=True)
+df.drop_duplicates(subset=['Title'], inplace=True)
 df.head()
 
 # data cleaning and exploring
@@ -19,7 +22,7 @@ print(df.isnull().sum())
 df['Team'].fillna('Unknown', inplace=True)
 df['Summary'].fillna('Unknown', inplace=True)
 df = df.fillna(method='ffill')
-df.drop_duplicates(inplace=True)
+
 print(df.isnull().sum())
 column_names = df.columns.tolist()
 print(column_names)
@@ -27,7 +30,7 @@ df = df.drop('Unnamed: 0', axis=1)
 # Combine Teams with same name
 df.loc[df['Team'] == "['FromSoftware', 'Sony Computer Entertainment']", 'Team'] += ', ' + \
     df.loc[df['Team'] ==
-        "['Sony Computer Entertainment', 'FromSoftware']", 'Team'].iloc[0]
+           "['Sony Computer Entertainment', 'FromSoftware']", 'Team'].iloc[0]
 # Delete duplicate row
 df = df[df['Team'] != "['Sony Computer Entertainment', 'FromSoftware']"]
 # Change name of the Team
@@ -86,7 +89,7 @@ rating_range = np.linspace(rating_mean - num_std *
 
 # Select only the data that falls within the specified range
 selected_data = df[(df['Rating'] >= rating_range[0]) &
-                    (df['Rating'] <= rating_range[-1])]
+                   (df['Rating'] <= rating_range[-1])]
 
 # Get top 3 games on each side of the mean
 top_games_positive = selected_data.sort_values(
@@ -95,7 +98,7 @@ top_games_negative = selected_data.sort_values(
     by='Rating', ascending=True).drop_duplicates(subset=['Title']).iloc[:3]
 # Get top 3 games that equal the mean
 top_games_at_mean = df[(df['Rating'] >= rating_mean - rating_std/2) & (df['Rating']
-                        <= rating_mean + rating_std/2)].drop_duplicates(subset=['Title']).iloc[:3]
+                                                                       <= rating_mean + rating_std/2)].drop_duplicates(subset=['Title']).iloc[:3]
 
 # Print the top games
 print(f'Top {num_std} standard deviations above the mean:')
@@ -135,8 +138,8 @@ df['Plays'] = df['Plays'].str.replace('K', '000')
 df['Plays'] = pd.to_numeric(df['Plays'], errors='coerce')
 
 # fill NaN values with 0
-df['Plays'] = df['Plays'].fillna(0)
-data = df[['Team', 'Plays']].dropna()
+df['Plays'] = df['Plays'].fillna(0, inplace=True)
+data = df[['Team', 'Plays']].dropna(inplace=True)
 
 
 # Create a binary matrix of genre values for each game
@@ -212,9 +215,9 @@ for index, row in df.iterrows():
     column_value = row['Team']
 
     # Split the column value by ',' into separate 'developer' and 'publisher' values
-    
+
     if ',' in column_value:
-        developer, publisher = column_value.split(',',maxsplit=1)
+        developer, publisher = column_value.split(',', maxsplit=1)
     else:
         developer, publisher = column_value, column_value
 
@@ -236,18 +239,22 @@ popularity = publish.sum().sort_values(ascending=False)
 # Print the popularity of each genre
 popularity.head()
 
-counts = df.groupby(['Developer', 'Publisher']).size().reset_index(name='Count').sort_values(by='Count', ascending=False)[:5]
+counts = df.groupby(['Developer', 'Publisher']).size().reset_index(
+    name='Count').sort_values(by='Count', ascending=False)[:5]
 
 # Merge counts dataframe with the original dataframe to get the release date for each game
-merged_df = pd.merge(counts, df[['Developer', 'Publisher', 'Release Date']], on=['Developer', 'Publisher'], how='left')
+merged_df = pd.merge(counts, df[['Developer', 'Publisher', 'Release Date']], on=[
+                     'Developer', 'Publisher'], how='left')
 
 # Create a timeline plot of the top 5 counts
 fig, ax = plt.subplots(figsize=(12, 8))
 
-sns.scatterplot(data=merged_df, x="Release Date", y="Publisher", hue="Developer", s=150, alpha=0.8, ax=ax)
+sns.scatterplot(data=merged_df, x="Release Date", y="Publisher",
+                hue="Developer", s=150, alpha=0.8, ax=ax)
 
 # Set the title and axis labels
-ax.set_title("Top 5 Developer-Publisher Pairs by Publisher and Their Games Timeline", fontsize=18)
+ax.set_title(
+    "Top 5 Developer-Publisher Pairs by Publisher and Their Games Timeline", fontsize=18)
 ax.set_xlabel("Release Date", fontsize=14)
 ax.set_ylabel("Publisher", fontsize=14)
 ax.legend(bbox_to_anchor=(1.02, 1), loc="upper left", fontsize=12)
@@ -258,12 +265,43 @@ ax.grid(axis="y", alpha=0.3)
 # Show the plot
 plt.show()
 
+# Remove games with missing ratings
+df = df.dropna(subset=['Rating'])
+# Drop rows with NaN values
+df.dropna(subset=['Release Date'],inplace=True)
+# Convert the Release Date column to Unix timestamp values
+df['Release Date'] = df['Release Date'].apply(lambda x: int(x.timestamp()))
+
+# Define the input and output variables
+X = df[['Release Date', 'Rating']].values.reshape(-1,2)
+y = (df['Rating'] > 4)
+
+# Split the dataset into a training set and a test set
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Train the Random Forest regressor model
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+
+# Predict the release date for a high rated game in the future
+next_rating = 4.5  # set the expected rating of the next high rated game
+next_release_date = pd.to_datetime('2024-01-01')  # set a future date for the prediction input
+next_release_date_unix = int(next_release_date.timestamp())
+next_release_date_predicted = pd.to_datetime(rf.predict([[next_release_date_unix, next_rating]])[0], unit="s")
+print(f'The predicted release date for the next high rated game (with rating {next_rating}) is {next_release_date_predicted}.')
 
 
 
 
 
+# new_df = df.loc[:, ['Title', 'Rating', 'Release Date']].mean()
+# new_df.head()
+# # Specify the release date
+# release_date = '2022-02-25'
+
+# # Filter the dataframe to only include games with the specified release date
+# games = df[df['Release Date'] == release_date]
 
 
-
-
+# # Print the games with the specified release date
+# games.head()
