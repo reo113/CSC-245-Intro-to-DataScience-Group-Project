@@ -1,0 +1,86 @@
+#MACHINE LEARNING LINEAR REGRESSION
+#The provided code snippet is using linear regression to fit a line to the given data points.
+# It aims to predict the relationship between the 'Rating' and 'Playing' variables in the dataset 'top_playing_game_of_all_time'.
+
+#This line calculates the linear regression parameters using the linregress function from the stats module.
+# It takes the 'Rating' and 'Playing' columns from the dataset as inputs and returns the slope, intercept, correlation coefficient (r),
+# p-value (p), and standard error (std_err) of the regression.
+slope, intercept, r, p, std_err = stats.linregress(top_playing_game_of_all_time['Rating'], top_playing_game_of_all_time['Playing'])
+
+
+# This is a function definition for myfunc.
+# It takes an input x and uses the slope and intercept values obtained from the linear regression to calculate the corresponding y-value on the line.
+def myfunc(x):
+  return slope * x + intercept
+
+
+
+#This line applies the myfunc function to each value in the 'Rating' column of the dataset,
+# generating a new array of predicted y-values.
+# This array represents the values on the y-axis of the fitted line.
+mymodel = list(map(myfunc, top_playing_game_of_all_time['Rating']))
+
+#This code plots the original scatter plot of the 'Rating' versus 'Playing' data points.
+plt.scatter(top_playing_game_of_all_time['Rating'], top_playing_game_of_all_time['Playing'])
+#This line plots the line of linear regression using the 'Rating' values from the dataset and the corresponding predicted 'Playing' values from mymodel.
+plt.plot(top_playing_game_of_all_time['Rating'], mymodel)
+
+# Set the title and axis labels
+plt.title("Top 10 Most Played Games and Their Ratings", fontsize=18)
+plt.xlabel("Rating", fontsize=14)
+plt.ylabel("Plays", fontsize=14)
+
+# Add legend with slope, intercept, r, p, and std_err
+legend_text = f"slope={slope:.2f}, intercept={intercept:.2f}\n"
+legend_text += f"r={r:.2f}, p={p:.2f}, std_err={std_err:.2f}"
+#plt.legend([legend_text], loc='upper left')
+
+# Add a grid to the plot
+plt.grid(alpha=0.3)
+
+#Shows the plot
+plt.show()
+
+print("This is the r value of the linear regression: ")
+print(r)
+#In summary, the code fits a linear regression line
+# to the data points and visualizes it using a scatter plot
+# and the line of linear regression. The line represents the
+# predicted relationship between the 'Rating' and 'Playing' variables
+# based on the linear regression model.
+
+#Overall, the linear regression line indicates
+#the change in the 'Playing' variable for every unit increase in the 'Rating' variable.
+# Since the slope is positive, it suggests a positive relationship, meaning that as the
+# 'Rating' increases, the 'Playing' tends to increase as well.
+
+#From this model we can conclude that the rating of  video
+#game has a positive correlation to the amount of people
+#that will be playing the game.
+
+
+#############################################
+#This is the same rating/playing dataframe
+#as a polynomial regression instead if a linear regression
+# Sample data
+x = top_playing_game_of_all_time['Rating']
+y = top_playing_game_of_all_time['Playing']
+
+# Degree of the polynomial
+degree = 2
+
+# Fit the polynomial regression model
+coefficients = np.polyfit(x, y, degree)
+p = np.poly1d(coefficients)
+
+# Generate polynomial predictions
+x_pred = np.linspace(min(x), max(x), 100)
+y_pred = p(x_pred)
+
+# Plot the original data and the polynomial regression curve
+plt.scatter(x, y, label='Original Data')
+plt.plot(x_pred, y_pred, color='red', label='Polynomial Regression')
+plt.xlabel('Rating')
+plt.ylabel('Playing')
+plt.legend()
+plt.show()
