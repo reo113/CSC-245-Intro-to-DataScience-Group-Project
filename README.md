@@ -16,7 +16,7 @@ The main objectives of this data science project are:
 
 ## Data Source
 
-The dataset used in this project was obtained from [source-link]([https://www.kaggle.com/datasets/arnabchaki/popular-video-games-1980-2023]). It includes the following columns:
+The dataset used in this project was obtained from [source-link](https://www.kaggle.com/datasets/arnabchaki/popular-video-games-1980-2023). It includes the following columns:
 
 1. Title: Games Title
 2. Release Date: Date of release of the game.
